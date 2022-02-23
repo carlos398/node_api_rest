@@ -1,5 +1,8 @@
 const express = require('express');
+
 const ProudctService = require('../services/product.service')
+const validatorHandler = require('./../middlewares/validator.handler')
+const { createProductSchema, updateProductSchema, getProductSchema } = require('./../schemas/product.schema')
 
 const router = express.Router();
 const service = new ProudctService();
@@ -17,18 +20,20 @@ router.get('/filter', (req, res) => {
 })
 
 // path params obligatorios
-router.get('/:id', (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const product = service.findOne(id)
-    res.json(product)
-  } catch (error) {
-    next(error)
-  }
-})
+router.get('/:id',
+  validatorHandler(getProductSchema,'params'),
+  (req, res, next) => {
+      try {
+        const { id } = req.params;
+        const product = service.findOne(id)
+        res.json(product)
+      } catch (error) {
+        next(error)
+      }
+    })
 
 // METODO POST
-router.post('/', (req,res) => {
+router.post('/', validatorHandler(createProductSchema,'body'), (req, res) => {
   const body = req.body
   const newPorduct = service.create(body)
   res.status(201).json({
@@ -38,9 +43,12 @@ router.post('/', (req,res) => {
 })
 
 // PATCH
-router.patch('/:id', (req,res) => {
+router.patch('/:id',
+ validatorHandler(getProductSchema,'params'),
+ validatorHandler(updateProductSchema,'body'),
+ (req, res) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
     const body = req.body;
     const product = service.update(id, body);
     res.json({
@@ -54,8 +62,8 @@ router.patch('/:id', (req,res) => {
 })
 
 // DELETE
-router.delete('/:id', (req,res) => {
-  const {id} = req.params
+router.delete('/:id', (req, res) => {
+  const { id } = req.params
   const rta = service.delete(id);
   res.json({
     message: 'delete',
